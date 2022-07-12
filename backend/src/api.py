@@ -4,40 +4,21 @@ from flask import Flask, request, jsonify, abort
 from sqlalchemy import exc
 import json
 from flask_cors import CORS
-
-from backend.src.error_handler import ApiError
-
 from .database.models import db_drop_and_create_all, setup_db, Drink
-from .auth.auth import AuthError, requires_auth
+from .auth.auth import requires_auth
+from .errors import throw, ApiError
 
 app = Flask(__name__)
 setup_db(app)
 CORS(app)
 
-# Raise errors
-
-
-def raise_error(code=500):
-
-    if code == 500:
-        raise ApiError('Server Error', code)
-    elif code == 410:
-        raise ApiError('Resource Deleted', code)
-    elif code == 404:
-        raise ApiError('Not Found', code)
-    elif code == 401:
-        raise ApiError('Unauthorized Request', code)
-    elif code == 403:
-        raise ApiError('Forbidden Request', code)
-    elif code == 422:
-        raise ApiError('Unprocessable Request', code)
 
 # Check resource and throw erorr if not found
 
 
 def check_resource(resource, code):
     if not resource:
-        raise_error(code)
+        throw(code=code)
 
 
 '''
@@ -79,6 +60,7 @@ def get_drinks():
 
 
 @app.route('/api/v1/drinks-detail')
+@requires_auth(permission='get:drinks-detail')
 def get_drink_details():
 
     drinks = [drink.long() for drink in Drink.query.all()]
@@ -99,6 +81,7 @@ def get_drink_details():
 
 
 @app.route('/api/v1/drinks', methods=['POST'])
+@requires_auth(permission='post:drinks')
 def add_drink():
     try:
         request_data = request.get_json()
@@ -109,7 +92,7 @@ def add_drink():
         new_drink = new_drink.long()
         return jsonify({'success': True, 'drinks': new_drink})
     except:
-        raise_error(500)
+        throw(code=500)
 
 
 '''
@@ -125,11 +108,18 @@ def add_drink():
 '''
 
 
-@app.route('/api/v1/drinks/<int:drink_id>')
-def get_drink(drink_id):
+@app.route('/api/v1/drinks/<int:drink_id>', methods=['PATCH'])
+@requires_auth(permission='patch:drinks')
+def update_drink(drink_id):
+    request_data = request.get_json()
+    recipe = json.dumps(request_data['recipe'])
 
     drink = Drink.query.get(drink_id)
     check_resource(drink, 404)
+
+    drink.title = request_data['title']
+    drink.recipe = recipe
+
     Drink.update(drink)
     return jsonify({'success': True, 'drinks': drink.long()})
 
@@ -147,11 +137,12 @@ def get_drink(drink_id):
 
 
 @app.route('/api/v1/drinks/<int:drink_id>', methods=['DELETE'])
+@requires_auth(permission='delete:drinks')
 def delete_drink(drink_id):
     drink = Drink.query.get(drink_id)
     check_resource(drink, 410)
     Drink.delete(drink)
-    return jsonify({'success': True, 'delete': drink.id})
+    return jsonify({'success': True, 'delete': drink_id})
 
 
     # Error Handling
@@ -181,7 +172,7 @@ def delete_drink(drink_id):
 '''
 
 '''
-This Handles the errors through ApiError handler i implemented in prev. proj.
+I handle the errors through ApiError handler i implemented in prev. proj.
 '''
 
 
@@ -200,3 +191,4 @@ def handle_api_errors(error):
 @TODO implement error handler for AuthError
     error handler should conform to general task above
 '''
+# See error_handler.py and errors.py

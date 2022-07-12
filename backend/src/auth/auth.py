@@ -1,13 +1,17 @@
+import os
 import json
 from flask import request, _request_ctx_stack
 from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
+from src.errors import throw
+from dotenv import load_dotenv
 
+load_dotenv()
 
-AUTH0_DOMAIN = 'dev-083t87re.us.auth0.com'
-ALGORITHMS = ['RS256']
-API_AUDIENCE = 'http://127.0.0.1:5000/api'
+AUTH0_DOMAIN = os.getenv("AUTH0_DOMAIN")
+ALGORITHMS = os.getenv("ALGORITHMS")
+API_AUDIENCE = os.getenv("API_AUDIENCE")
 
 # AuthError Exception
 '''
@@ -15,11 +19,12 @@ AuthError Exception
 A standardized way to communicate auth failure modes
 '''
 
+# Am using throw function for error handling - see errors.py
 
-class AuthError(Exception):
-    def __init__(self, error, status_code):
-        self.error = error
-        self.status_code = status_code
+# class AuthError(Exception):
+#     def __init__(self, error, status_code):
+#         self.error = error
+#         self.status_code = status_code
 
 
 # Auth Header
@@ -35,14 +40,15 @@ class AuthError(Exception):
 
 
 def get_token_auth_header():
+
     if 'Authorization' not in request.headers:
-        raise AuthError('Unauthorize Access', 401)
-    auth_header_parts = request.headers['Authorization'].split(' ')[1]
+        throw(code=401)
+    auth_header_parts = request.headers['Authorization'].split(' ')
 
     if(len(auth_header_parts) < 2):
-        raise AuthError('Unauthorize Access', 401)
+        throw(code=401)
     elif auth_header_parts[0].lower() != 'bearer':
-        raise AuthError('Unauthorize Access', 401)
+        throw(code=401)
     token = auth_header_parts[1]
 
     return token
@@ -62,9 +68,9 @@ def get_token_auth_header():
 
 
 def check_permissions(permission, payload):
-    print(payload)
-    if not permission in payload.permissions:
-        raise AuthError('Forbidden', 403)
+
+    if not permission in payload['permissions']:
+        throw(code=403)
 
 
 '''
@@ -88,10 +94,7 @@ def verify_decode_jwt(token):
     unverified_header = jwt.get_unverified_header(token)
     rsa_key = {}
     if 'kid' not in unverified_header:
-        raise AuthError({
-            'success': 'invalid_header',
-            'error': 'Authorization malformed.'
-        }, 401)
+        throw(msg='Authorization malformed', code=401)
 
     for key in jwks['keys']:
         if key['kid'] == unverified_header['kid']:
@@ -115,25 +118,15 @@ def verify_decode_jwt(token):
             return payload
 
         except jwt.ExpiredSignatureError:
-            raise AuthError({
-                'success': False,
-                'error': 'Token expired.'
-            }, 401)
+            throw(msg='Token expired', code=401)
 
         except jwt.JWTClaimsError:
-            raise AuthError({
-                'success': False,
-                'error': 'Incorrect claims. Please, check the audience and issuer.'
-            }, 401)
+            throw(msg='Incorrect claims. Please, check the audience and issuer',
+                  code=401)
         except Exception:
-            raise AuthError({
-                'success': False,
-                'error': 'Unable to parse authentication token.'
-            }, 400)
-    raise AuthError({
-        'success': 'invalid_header',
-        'error': 'Unable to find the appropriate key.'
-    }, 400)
+            throw(msg='Unable to parse authentication token', code=400)
+
+    throw(msg='Unable to find the appropriate key', code=400)
 
 
 '''
@@ -155,7 +148,7 @@ def requires_auth(permission=''):
             token = get_token_auth_header()
             payload = verify_decode_jwt(token)
             check_permissions(permission, payload)
-            return f(payload, *args, **kwargs)
+            return f(*args, **kwargs)
 
         return wrapper
     return requires_auth_decorator
