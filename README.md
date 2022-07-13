@@ -2,34 +2,26 @@
 
 ## Full Stack Nano - IAM Final Project
 
-Udacity has decided to open a new digitally enabled cafe for students to order drinks, socialize, and study hard. But they need help setting up their menu experience.
+Udacity - Coffee Shop Project
 
-You have been called on to demonstrate your newly learned skills to create a full stack drink menu application. The application must:
+# Setup
 
-1. Display graphics representing the ratios of ingredients in each drink.
-2. Allow public users to view drink names and graphics.
-3. Allow the shop baristas to see the recipe information.
-4. Allow the shop managers to create new drinks and edit existing drinks.
+Clone the repo and cd into the project folder
 
-## Tasks
+### Backend 
 
-There are `@TODO` comments throughout the project. We recommend tackling the sections in order. Start by reading the READMEs in:
+1. Create python virtual environment `python -m venv .venv` and activate it using `.venv/Scripts/Activate` 
+2. Install the dependencies cd into the backend folder and run `pip install -r requirements.txt`
+3. Set App and Env cd into src folder and run `$env:FLASK_APP='api.py'` then `$env:FLASK_ENV='development'`
+4. Run the app `flask run --reload --debugger`
 
-1. [`./backend/`](./backend/README.md)
-2. [`./frontend/`](./frontend/README.md)
+### Frontend 
 
-## About the Stack
+1. Install Ionic CLI `npm install -g @ionic/cli`
+2. Install Angular CLI `npm install -g @angular/cli`
+1. cd into frontend and run `npm install`
 
-We started the full stack application for you. It is designed with some key functional areas:
 
-### Backend
+### Postman
 
-The `./backend` directory contains a partially completed Flask server with a pre-written SQLAlchemy module to simplify your data needs. You will need to complete the required endpoints, configure, and integrate Auth0 for authentication.
-
-[View the README.md within ./backend for more details.](./backend/README.md)
-
-### Frontend
-
-The `./frontend` directory contains a complete Ionic frontend to consume the data from the Flask server. You will only need to update the environment variables found within (./frontend/src/environment/environment.ts) to reflect the Auth0 configuration details set up for the backend app.
-
-[View the README.md within ./frontend for more details.](./frontend/README.md)
+1. Open Postman and import `udacity-fsnd-udaspicelatte.postman_collection.json` file from project backend folder
