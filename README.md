@@ -24,4 +24,4 @@ Clone the repo and cd into the project folder
 
 ### Postman
 
-1. Open Postman and import `udacity-fsnd-udaspicelatte.postman_collection.json` file from project backend folder
+1. Open Postman and import `udacity-fsnd-udaspicelatte.postman_collection.json` file from project backend folder into your workspace
